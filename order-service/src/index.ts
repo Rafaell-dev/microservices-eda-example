@@ -9,8 +9,8 @@ import {
   closeDatabase,
   DatabaseType,
 } from "../../shared/database";
-import { registerOrderRoutes } from "./routes/orders";
-import { initOrderRepository } from "./utils/orderRepository";
+import { registerOrderRoutes } from "./orders/orderRoutes";
+import { initOrderRepository } from "./orders/orderRepository";
 import { handlePaymentEvents } from "./handlers/orderEventHandler";
 
 dotenv.config();

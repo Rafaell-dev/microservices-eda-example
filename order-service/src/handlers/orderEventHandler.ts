@@ -3,7 +3,7 @@ import {
   PaymentProcessedPayload,
   PaymentFailedPayload,
 } from "../../../shared/types";
-import { updateOrderStatus, getOrderById } from "../utils/orderRepository";
+import { updateOrderStatus, getOrderById } from "../orders/orderRepository";
 
 /**
  * Handler para processar eventos de pagamento e atualizar status do pedido
