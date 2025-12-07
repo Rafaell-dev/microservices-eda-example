@@ -1,7 +1,15 @@
 import Fastify from "fastify";
 import dotenv from "dotenv";
+import path from "path";
 import { getRedisClient, closeRedisConnection } from "../../shared/redisClient";
+import {
+  createDatabase,
+  initializeAuditTables,
+  closeDatabase,
+  DatabaseType,
+} from "../../shared/database";
 import { startConsumer } from "../../shared/eventConsumer";
+import { initAuditRepository } from "./handlers/auditRepository";
 import {
   handleAuditEvent,
   getAuditLogs,
@@ -11,6 +19,10 @@ import {
 dotenv.config();
 
 const PORT = parseInt(process.env.PORT || "3005", 10);
+const DATABASE_PATH =
+  process.env.DATABASE_PATH || path.join(__dirname, "../data/audit.db");
+
+let db: DatabaseType;
 
 async function main() {
   const fastify = Fastify({
@@ -29,6 +41,12 @@ async function main() {
   let stopConsumer: (() => void) | null = null;
 
   try {
+    // Inicializar banco de dados SQLite
+    db = createDatabase(DATABASE_PATH);
+    initializeAuditTables(db);
+    initAuditRepository(db);
+    fastify.log.info(`Banco de dados inicializado: ${DATABASE_PATH}`);
+
     // Inicializar conexão Redis
     await getRedisClient();
     fastify.log.info("Conectado ao Redis");
@@ -63,7 +81,7 @@ async function main() {
       return getAuditStats();
     });
 
-    // Encerramento gracioso
+    // Encerramento
     const signals: NodeJS.Signals[] = ["SIGINT", "SIGTERM"];
     signals.forEach((signal) => {
       process.on(signal, async () => {
@@ -71,6 +89,7 @@ async function main() {
         if (stopConsumer) stopConsumer();
         await fastify.close();
         await closeRedisConnection();
+        closeDatabase(db);
         process.exit(0);
       });
     });
@@ -80,6 +99,7 @@ async function main() {
     fastify.log.info(`Serviço de Auditoria rodando na porta ${PORT}`);
   } catch (err) {
     fastify.log.error(err);
+    if (db) closeDatabase(db);
     process.exit(1);
   }
 }

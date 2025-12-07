@@ -3,6 +3,11 @@ import { v4 as uuidv4 } from "uuid";
 import { publishEvent } from "../../../shared/eventPublisher";
 import { OrderCreatedPayload, OrderItem } from "../../../shared/types";
 import { validateOrder, formatOrderResponse } from "../utils/orderUtils";
+import {
+  createOrder as createOrderInDb,
+  getOrderById,
+  getAllOrders,
+} from "../utils/orderRepository";
 
 interface CreateOrderBody {
   customerId: string;
@@ -13,19 +18,6 @@ interface CreateOrderBody {
 interface GetOrderParams {
   id: string;
 }
-
-// Armazenamento de pedidos em memória (para fins de demonstração)
-const orders = new Map<
-  string,
-  {
-    id: string;
-    customerId: string;
-    items: OrderItem[];
-    total: number;
-    status: string;
-    createdAt: string;
-  }
->();
 
 export async function registerOrderRoutes(
   fastify: FastifyInstance
@@ -77,7 +69,7 @@ export async function registerOrderRoutes(
       const orderId = uuidv4();
       const createdAt = new Date().toISOString();
 
-      // Armazenar pedido
+      // Criar pedido no banco de dados
       const order = {
         id: orderId,
         customerId,
@@ -86,7 +78,17 @@ export async function registerOrderRoutes(
         status: "pending",
         createdAt,
       };
-      orders.set(orderId, order);
+
+      try {
+        createOrderInDb(order);
+        request.log.info({ orderId }, "Pedido salvo no banco de dados");
+      } catch (dbError) {
+        request.log.error(
+          { error: dbError },
+          "Falha ao salvar pedido no banco"
+        );
+        return reply.status(500).send({ error: "Falha ao salvar pedido" });
+      }
 
       // Publicar evento PedidoCriado
       const payload: OrderCreatedPayload = {
@@ -97,7 +99,10 @@ export async function registerOrderRoutes(
       };
 
       try {
-        const eventId = await publishEvent("OrderCreated", payload);
+        const eventId = await publishEvent(
+          "OrderCreated",
+          payload as Record<string, unknown>
+        );
         request.log.info({ orderId, eventId }, "Evento PedidoCriado publicado");
       } catch (error) {
         request.log.error({ error }, "Falha ao publicar evento PedidoCriado");
@@ -116,7 +121,7 @@ export async function registerOrderRoutes(
       reply: FastifyReply
     ) => {
       const { id } = request.params;
-      const order = orders.get(id);
+      const order = getOrderById(id);
 
       if (!order) {
         return reply.status(404).send({ error: "Pedido não encontrado" });
@@ -128,6 +133,6 @@ export async function registerOrderRoutes(
 
   // Listar todos os pedidos
   fastify.get("/orders", async () => {
-    return Array.from(orders.values()).map(formatOrderResponse);
+    return getAllOrders().map(formatOrderResponse);
   });
 }
