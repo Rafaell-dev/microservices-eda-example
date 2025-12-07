@@ -13,7 +13,8 @@ Sistema de processamento de pedidos usando **Arquitetura Orientada a Eventos (ED
          ▼                                      │
 ┌─────────────────┐                             │
 │  order-service  │──── OrderCreated ──────────►│
-│     :3001       │                             │
+│     :3001       │◄─── PaymentProcessed ───────┤  (atualiza status)
+│     [SQLite]    │◄─── PaymentFailed ──────────┤
 └─────────────────┘                             │
                                                 │
          ┌──────────────────────────────────────┤
@@ -50,6 +51,7 @@ Sistema de processamento de pedidos usando **Arquitetura Orientada a Eventos (ED
 ┌─────────────────┐
 │  audit-service  │◄─── ALL EVENTS
 │     :3005       │
+│     [SQLite]    │
 └─────────────────┘
 ```
 
@@ -59,15 +61,22 @@ Sistema de processamento de pedidos usando **Arquitetura Orientada a Eventos (ED
 
 - Node.js 18+
 - Docker e Docker Compose
-- npm ou yarn
+- npm
 
-### 1. Iniciar o Redis
+### Início Rápido
 
 ```bash
+# 1. Iniciar Redis
 docker-compose up -d
+
+# 2. Instalar dependências
+npm run install:all
+
+# 3. Iniciar todos os serviços
+npm run dev
 ```
 
-### 2. Instalar Dependências
+### Instalação Manual
 
 ```bash
 # Shared modules
@@ -81,26 +90,24 @@ cd notification-service && npm install && cd ..
 cd audit-service && npm install && cd ..
 ```
 
-### 3. Iniciar os Serviços
+## ⚙️ Configuração
 
-Abra um terminal para cada serviço:
+Cada serviço possui um arquivo `.env.example`. Copie para `.env` e ajuste:
 
 ```bash
-# Terminal 1 - Order Service
-cd order-service && npm run dev
-
-# Terminal 2 - Payment Service
-cd payment-service && npm run dev
-
-# Terminal 3 - Inventory Service
-cd inventory-service && npm run dev
-
-# Terminal 4 - Notification Service
-cd notification-service && npm run dev
-
-# Terminal 5 - Audit Service
-cd audit-service && npm run dev
+cp order-service/.env.example order-service/.env
 ```
+
+### Variáveis de Ambiente
+
+| Variável           | Descrição         | Padrão        |
+| ------------------ | ----------------- | ------------- |
+| `PORT`             | Porta do serviço  | 3001-3005     |
+| `REDIS_HOST`       | Host do Redis     | localhost     |
+| `REDIS_PORT`       | Porta do Redis    | 6379          |
+| `REDIS_PASSWORD`   | Senha do Redis    | -             |
+| `REDIS_STREAM_KEY` | Nome do stream    | events-stream |
+| `DATABASE_PATH`    | Caminho do SQLite | ./data/\*.db  |
 
 ## 📡 Endpoints da API
 
@@ -143,7 +150,7 @@ cd audit-service && npm run dev
 | GET    | `/audit/stats`                  | Ver estatísticas      |
 | GET    | `/health`                       | Health check          |
 
-## 🧪 Exemplos de Teste
+## 🧪 Exemplos de Uso
 
 ### Criar um Pedido
 
@@ -155,116 +162,146 @@ curl -X POST http://localhost:3001/orders \
     "items": [
       { "productId": "prod-1", "quantity": 2, "price": 49.90 },
       { "productId": "prod-2", "quantity": 1, "price": 99.90 }
-    ],
-    "total": 199.70
+    ]
   }'
 ```
 
-### Verificar Estoque
+> **Nota:** O `total` é calculado automaticamente pela aplicação.
+
+### Verificar Status do Pedido
 
 ```bash
-curl http://localhost:3003/inventory
+curl http://localhost:3001/orders/{orderId}
 ```
 
-### Ver Notificações
+**Status possíveis:**
 
-```bash
-curl http://localhost:3004/notifications
-```
+- `pending` - Aguardando pagamento
+- `paid` - Pagamento confirmado
+- `payment_failed` - Pagamento recusado
 
-### Ver Logs de Auditoria
-
-```bash
-curl http://localhost:3005/audit
-```
-
-### Ver Estatísticas
+### Ver Estatísticas de Auditoria
 
 ```bash
 curl http://localhost:3005/audit/stats
 ```
 
+## 🧪 Testes de Carga
+
+O projeto inclui uma suite completa de testes de carga com k6:
+
+```bash
+cd load-tests
+
+# Teste rápido (30s)
+npm run test:simple
+
+# Smoke test (3 min)
+npm run test:smoke
+
+# Teste de stress
+npm run test:stress
+```
+
+Para mais detalhes, veja [load-tests/README.md](load-tests/README.md).
+
 ## 📦 Estrutura do Projeto
 
 ```
 EDA/
-├── docker-compose.yml          # Container Redis
-├── README.md                   # Este arquivo
+├── docker-compose.yml
+├── package.json
+├── README.md
+├── EDA_Order_Processing.postman_collection.json
+│
 ├── shared/                     # Módulos compartilhados
 │   ├── types.ts               # Interfaces TypeScript
 │   ├── redisClient.ts         # Conexão Redis
 │   ├── eventPublisher.ts      # Publicar eventos
 │   ├── eventConsumer.ts       # Consumir eventos
-│   └── index.ts               # Barrel export
+│   ├── database.ts            # Conexão SQLite
+│   └── index.ts
+│
 ├── order-service/              # Serviço de pedidos
 │   ├── src/
 │   │   ├── index.ts
-│   │   ├── routes/orders.ts
-│   │   └── utils/orderUtils.ts
-│   ├── package.json
-│   └── tsconfig.json
-├── payment-service/            # Serviço de pagamento
+│   │   ├── orders/
+│   │   │   ├── orderRoutes.ts      # Rotas + Swagger
+│   │   │   ├── orderController.ts  # Controller
+│   │   │   ├── orderService.ts     # Lógica de negócio
+│   │   │   └── orderRepository.ts  # Acesso ao banco
+│   │   ├── handlers/
+│   │   │   └── orderEventHandler.ts
+│   │   └── utils/
+│   ├── data/orders.db          # Banco SQLite
+│   └── .env.example
+│
+├── payment-service/
+├── inventory-service/
+├── notification-service/
+│
+├── audit-service/
 │   ├── src/
-│   │   ├── index.ts
-│   │   └── handlers/paymentHandler.ts
-│   ├── package.json
-│   └── tsconfig.json
-├── inventory-service/          # Serviço de inventário
-│   ├── src/
-│   │   ├── index.ts
-│   │   └── handlers/inventoryHandler.ts
-│   ├── package.json
-│   └── tsconfig.json
-├── notification-service/       # Serviço de notificações
-│   ├── src/
-│   │   ├── index.ts
-│   │   └── handlers/notificationHandler.ts
-│   ├── package.json
-│   └── tsconfig.json
-└── audit-service/              # Serviço de auditoria
-    ├── src/
-    │   ├── index.ts
-    │   └── handlers/auditHandler.ts
-    ├── data/audit.json         # Dados persistidos
-    ├── package.json
-    └── tsconfig.json
+│   │   ├── handlers/
+│   │   │   ├── auditHandler.ts
+│   │   │   └── auditRepository.ts
+│   ├── data/audit.db           # Banco SQLite
+│   └── .env.example
+│
+└── load-tests/                 # Testes de carga
+    ├── load-test.js
+    ├── k6.exe
+    └── README.md
 ```
 
 ## 🔄 Fluxo de Eventos
 
 1. **Cliente** envia POST `/orders` para **order-service**
-2. **order-service** publica evento `OrderCreated` no Redis Stream
-3. **payment-service** consome `OrderCreated` e:
+2. **order-service** salva pedido no SQLite e publica `OrderCreated`
+3. **payment-service** consome `OrderCreated`:
    - Processa pagamento (simulado)
    - Publica `PaymentProcessed` ou `PaymentFailed`
-4. **inventory-service** consome `OrderCreated` e:
+4. **order-service** consome eventos de pagamento:
+   - Atualiza status para `paid` ou `payment_failed`
+5. **inventory-service** consome `OrderCreated`:
    - Atualiza estoque
    - Publica `InventoryUpdated`
-5. **notification-service** consome eventos de pagamento e inventário:
+6. **notification-service** consome eventos de pagamento e inventário:
    - Envia notificações (simulado via log)
-6. **audit-service** consome TODOS os eventos:
-   - Persiste em arquivo JSON para auditoria
+7. **audit-service** consome TODOS os eventos:
+   - Persiste em SQLite para auditoria
+
+## 💾 Persistência
+
+| Serviço       | Tipo    | Arquivo          |
+| ------------- | ------- | ---------------- |
+| order-service | SQLite  | `data/orders.db` |
+| audit-service | SQLite  | `data/audit.db`  |
+| Outros        | Memória | -                |
 
 ## 📝 Formato dos Eventos
 
-Todos os eventos seguem o padrão:
-
 ```json
 {
-  "eventId": "uuid-v4-gerado",
+  "eventId": "uuid-v4",
   "eventType": "OrderCreated",
   "timestamp": "2024-01-15T10:30:00.000Z",
-  "payload": {
-    // dados específicos do evento
-  }
+  "payload": {}
 }
 ```
+
+**Tipos de eventos:**
+
+- `OrderCreated`
+- `PaymentProcessed`
+- `PaymentFailed`
+- `InventoryUpdated`
 
 ## ✅ Idempotência
 
 Os consumidores implementam verificação de idempotência:
 
-- Cada evento processado tem seu `eventId` armazenado em um Set
+- Cada evento processado tem seu `eventId` armazenado
 - Eventos duplicados são ignorados automaticamente
 - Garante processamento exactly-once
 
@@ -274,7 +311,7 @@ Os consumidores implementam verificação de idempotência:
 # Parar containers
 docker-compose down
 
-# Para remover volumes (dados Redis)
+# Remover volumes (dados Redis)
 docker-compose down -v
 ```
 
