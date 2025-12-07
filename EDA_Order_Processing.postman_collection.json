@@ -49,7 +49,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"customerId\": \"cust-001\",\n  \"items\": [\n    { \"productId\": \"prod-1\", \"quantity\": 2, \"price\": 49.90 },\n    { \"productId\": \"prod-2\", \"quantity\": 1, \"price\": 99.90 }\n  ],\n  \"total\": 199.70\n}"
+              "raw": "{\n  \"customerId\": \"cust-001\",\n  \"items\": [\n    { \"productId\": \"prod-1\", \"quantity\": 2, \"price\": 49.90 },\n    { \"productId\": \"prod-2\", \"quantity\": 1, \"price\": 99.90 }\n  ]\n}"
             },
             "url": {
               "raw": "{{order_service_url}}/orders",
