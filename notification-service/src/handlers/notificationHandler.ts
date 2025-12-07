@@ -16,7 +16,7 @@ interface Notification {
   orderId: string;
 }
 
-// Store sent notifications for demo purposes
+// Armazenar notificações enviadas para fins de demonstração
 const notifications: Notification[] = [];
 
 export function getNotifications(): Notification[] {
@@ -24,7 +24,7 @@ export function getNotifications(): Notification[] {
 }
 
 export async function handleNotificationEvent(event: BaseEvent): Promise<void> {
-  console.log(`[NotificationHandler] Processing event: ${event.eventType}`);
+  console.log(`[HandlerNotificação] Processando evento: ${event.eventType}`);
 
   switch (event.eventType) {
     case "PaymentProcessed":
@@ -38,7 +38,7 @@ export async function handleNotificationEvent(event: BaseEvent): Promise<void> {
       break;
     default:
       console.log(
-        `[NotificationHandler] Unknown event type: ${event.eventType}`
+        `[HandlerNotificação] Tipo de evento desconhecido: ${event.eventType}`
       );
   }
 }
@@ -50,7 +50,7 @@ async function handlePaymentProcessed(event: BaseEvent): Promise<void> {
     id: event.eventId,
     type: "payment_success",
     recipient: "customer@example.com",
-    subject: "Payment Confirmed",
+    subject: "Pagamento Confirmado",
     message: `Your payment of R$ ${payload.amount.toFixed(2)} for order ${
       payload.orderId
     } has been processed successfully via ${payload.method}.`,
@@ -61,7 +61,7 @@ async function handlePaymentProcessed(event: BaseEvent): Promise<void> {
 
   await sendNotification(notification);
   console.log(
-    `[NotificationHandler] ✅ Payment success notification sent for order: ${payload.orderId}`
+    `[HandlerNotificação] ✅ Notificação de sucesso de pagamento enviada para pedido: ${payload.orderId}`
   );
 }
 
@@ -72,7 +72,7 @@ async function handlePaymentFailed(event: BaseEvent): Promise<void> {
     id: event.eventId,
     type: "payment_failed",
     recipient: "customer@example.com",
-    subject: "Payment Failed",
+    subject: "Pagamento Falhou",
     message: `Your payment of R$ ${payload.amount.toFixed(2)} for order ${
       payload.orderId
     } has failed. Reason: ${payload.reason}. Please try again.`,
@@ -83,14 +83,14 @@ async function handlePaymentFailed(event: BaseEvent): Promise<void> {
 
   await sendNotification(notification);
   console.log(
-    `[NotificationHandler] ❌ Payment failed notification sent for order: ${payload.orderId}`
+    `[HandlerNotificação] ❌ Notificação de falha de pagamento enviada para pedido: ${payload.orderId}`
   );
 }
 
 async function handleInventoryUpdated(event: BaseEvent): Promise<void> {
   const payload = event.payload as InventoryUpdatedPayload;
 
-  // Check for low stock items
+  // Verificar itens com estoque baixo
   const lowStockItems = payload.items.filter((item) => item.newStock < 10);
 
   if (lowStockItems.length > 0) {
@@ -98,7 +98,7 @@ async function handleInventoryUpdated(event: BaseEvent): Promise<void> {
       id: event.eventId,
       type: "low_stock_alert",
       recipient: "warehouse@example.com",
-      subject: "Low Stock Alert",
+      subject: "Alerta de Estoque Baixo",
       message: `The following products are running low: ${lowStockItems
         .map((i) => `${i.productId} (${i.newStock} remaining)`)
         .join(", ")}`,
@@ -109,16 +109,16 @@ async function handleInventoryUpdated(event: BaseEvent): Promise<void> {
 
     await sendNotification(notification);
     console.log(
-      `[NotificationHandler] ⚠️ Low stock alert sent for order: ${payload.orderId}`
+      `[HandlerNotificação] ⚠️ Alerta de estoque baixo enviado para pedido: ${payload.orderId}`
     );
   }
 
-  // Order shipment notification
+  // Notificação de envio do pedido
   const shipmentNotification: Notification = {
     id: `${event.eventId}-shipment`,
     type: "order_processing",
     recipient: "customer@example.com",
-    subject: "Order Being Prepared",
+    subject: "Pedido em Preparação",
     message: `Your order ${payload.orderId} is being prepared for shipment.`,
     channel: "push",
     sentAt: new Date().toISOString(),
@@ -127,19 +127,19 @@ async function handleInventoryUpdated(event: BaseEvent): Promise<void> {
 
   await sendNotification(shipmentNotification);
   console.log(
-    `[NotificationHandler] 📦 Order processing notification sent for order: ${payload.orderId}`
+    `[HandlerNotificação] 📦 Notificação de processamento de pedido enviada para pedido: ${payload.orderId}`
   );
 }
 
 async function sendNotification(notification: Notification): Promise<void> {
-  // Simulate sending notification
+  // Simular envio de notificação
   await new Promise((resolve) => setTimeout(resolve, 100));
 
   notifications.push(notification);
 
   console.log(
-    `[NotificationHandler] Sending ${notification.channel.toUpperCase()}: "${
+    `[HandlerNotificação] Enviando ${notification.channel.toUpperCase()}: "${
       notification.subject
-    }" to ${notification.recipient}`
+    }" para ${notification.recipient}`
   );
 }

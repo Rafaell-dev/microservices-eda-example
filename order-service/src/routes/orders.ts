@@ -14,7 +14,7 @@ interface GetOrderParams {
   id: string;
 }
 
-// In-memory order storage (for demo purposes)
+// Armazenamento de pedidos em memória (para fins de demonstração)
 const orders = new Map<
   string,
   {
@@ -30,12 +30,12 @@ const orders = new Map<
 export async function registerOrderRoutes(
   fastify: FastifyInstance
 ): Promise<void> {
-  // Health check
+  // Verificação de saúde
   fastify.get("/health", async () => {
     return { status: "ok", service: "order-service" };
   });
 
-  // Create order
+  // Criar pedido
   fastify.post<{ Body: CreateOrderBody }>(
     "/orders",
     {
@@ -68,7 +68,7 @@ export async function registerOrderRoutes(
     ) => {
       const { customerId, items, total } = request.body;
 
-      // Validate order
+      // Validar pedido
       const validation = validateOrder(customerId, items, total);
       if (!validation.valid) {
         return reply.status(400).send({ error: validation.error });
@@ -77,7 +77,7 @@ export async function registerOrderRoutes(
       const orderId = uuidv4();
       const createdAt = new Date().toISOString();
 
-      // Store order
+      // Armazenar pedido
       const order = {
         id: orderId,
         customerId,
@@ -88,7 +88,7 @@ export async function registerOrderRoutes(
       };
       orders.set(orderId, order);
 
-      // Publish OrderCreated event
+      // Publicar evento PedidoCriado
       const payload: OrderCreatedPayload = {
         orderId,
         customerId,
@@ -98,17 +98,17 @@ export async function registerOrderRoutes(
 
       try {
         const eventId = await publishEvent("OrderCreated", payload);
-        request.log.info({ orderId, eventId }, "OrderCreated event published");
+        request.log.info({ orderId, eventId }, "Evento PedidoCriado publicado");
       } catch (error) {
-        request.log.error({ error }, "Failed to publish OrderCreated event");
-        return reply.status(500).send({ error: "Failed to process order" });
+        request.log.error({ error }, "Falha ao publicar evento PedidoCriado");
+        return reply.status(500).send({ error: "Falha ao processar pedido" });
       }
 
       return reply.status(201).send(formatOrderResponse(order));
     }
   );
 
-  // Get order by ID
+  // Buscar pedido por ID
   fastify.get<{ Params: GetOrderParams }>(
     "/orders/:id",
     async (
@@ -119,14 +119,14 @@ export async function registerOrderRoutes(
       const order = orders.get(id);
 
       if (!order) {
-        return reply.status(404).send({ error: "Order not found" });
+        return reply.status(404).send({ error: "Pedido não encontrado" });
       }
 
       return formatOrderResponse(order);
     }
   );
 
-  // List all orders
+  // Listar todos os pedidos
   fastify.get("/orders", async () => {
     return Array.from(orders.values()).map(formatOrderResponse);
   });

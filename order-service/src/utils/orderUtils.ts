@@ -11,27 +11,27 @@ export function validateOrder(
   total: number
 ): ValidationResult {
   if (!customerId || customerId.trim() === "") {
-    return { valid: false, error: "Customer ID is required" };
+    return { valid: false, error: "ID do cliente é obrigatório" };
   }
 
   if (!items || items.length === 0) {
-    return { valid: false, error: "Order must have at least one item" };
+    return { valid: false, error: "Pedido deve ter pelo menos um item" };
   }
 
   for (const item of items) {
     if (!item.productId || item.productId.trim() === "") {
-      return { valid: false, error: "Each item must have a product ID" };
+      return { valid: false, error: "Cada item deve ter um ID de produto" };
     }
     if (!item.quantity || item.quantity < 1) {
       return {
         valid: false,
-        error: "Each item must have a quantity of at least 1",
+        error: "Cada item deve ter uma quantidade de pelo menos 1",
       };
     }
   }
 
   if (total < 0) {
-    return { valid: false, error: "Total cannot be negative" };
+    return { valid: false, error: "Total não pode ser negativo" };
   }
 
   return { valid: true };

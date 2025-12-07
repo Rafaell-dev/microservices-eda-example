@@ -28,11 +28,11 @@ async function main() {
   let stopConsumer: (() => void) | null = null;
 
   try {
-    // Initialize Redis connection
+    // Inicializar conexão Redis
     await getRedisClient();
-    fastify.log.info("Connected to Redis");
+    fastify.log.info("Conectado ao Redis");
 
-    // Start event consumer
+    // Iniciar consumidor de eventos
     stopConsumer = await startConsumer({
       streamKey: process.env.REDIS_STREAM_KEY || "events-stream",
       groupName: "notification-service-group",
@@ -40,23 +40,23 @@ async function main() {
       eventTypes: ["PaymentProcessed", "PaymentFailed", "InventoryUpdated"],
       handler: handleNotificationEvent,
     });
-    fastify.log.info("Notification event consumer started");
+    fastify.log.info("Consumidor de eventos de notificação iniciado");
 
-    // Health check endpoint
+    // Endpoint de verificação de saúde
     fastify.get("/health", async () => {
       return { status: "ok", service: "notification-service" };
     });
 
-    // Get sent notifications (for testing)
+    // Obter notificações enviadas (para testes)
     fastify.get("/notifications", async () => {
       return getNotifications();
     });
 
-    // Graceful shutdown
+    // Encerramento
     const signals: NodeJS.Signals[] = ["SIGINT", "SIGTERM"];
     signals.forEach((signal) => {
       process.on(signal, async () => {
-        fastify.log.info(`Received ${signal}, shutting down...`);
+        fastify.log.info(`Sinal ${signal} recebido, encerrando...`);
         if (stopConsumer) stopConsumer();
         await fastify.close();
         await closeRedisConnection();
@@ -64,9 +64,9 @@ async function main() {
       });
     });
 
-    // Start server
+    // Iniciar servidor
     await fastify.listen({ port: PORT, host: "0.0.0.0" });
-    fastify.log.info(`Notification Service running on port ${PORT}`);
+    fastify.log.info(`Serviço de Notificações rodando na porta ${PORT}`);
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);

@@ -3,7 +3,7 @@ import { BaseEvent, ConsumerConfig, EventHandler } from "./types";
 
 const STREAM_KEY = process.env.REDIS_STREAM_KEY || "events-stream";
 
-// In-memory set for idempotency (in production, use Redis SET)
+// Conjunto em memória para idempotência (em produção, usar Redis SET)
 const processedEvents = new Set<string>();
 
 export interface ConsumerOptions {
@@ -20,15 +20,15 @@ async function ensureConsumerGroup(
   const client = await getRedisClient();
 
   try {
-    // Try to create the consumer group
+    // Tentar criar o grupo de consumidores
     await client.xGroupCreate(streamKey, groupName, "0", {
       MKSTREAM: true,
     });
-    console.log(`[Consumer] Created consumer group: ${groupName}`);
+    console.log(`[Consumidor] Grupo de consumidores criado: ${groupName}`);
   } catch (error: unknown) {
-    // Group already exists - this is fine
+    // Grupo já existe
     if (error instanceof Error && error.message.includes("BUSYGROUP")) {
-      console.log(`[Consumer] Consumer group already exists: ${groupName}`);
+      console.log(`[Consumidor] Grupo de consumidores já existe: ${groupName}`);
     } else {
       throw error;
     }
@@ -62,12 +62,12 @@ export async function startConsumer(
 
   const consumeLoop = async () => {
     console.log(
-      `[Consumer] Starting consumer: ${config.consumerName} in group: ${config.groupName}`
+      `[Consumidor] Iniciando consumidor: ${config.consumerName} no grupo: ${config.groupName}`
     );
 
     while (isRunning) {
       try {
-        // Read pending messages first, then new messages
+        // Ler mensagens pendentes primeiro, depois novas mensagens
         const streams = await client.xReadGroup(
           config.groupName,
           config.consumerName,
@@ -86,16 +86,16 @@ export async function startConsumer(
           for (const message of stream.messages) {
             const event = parseStreamMessage(message);
 
-            // Idempotency check
+            // Verificação de idempotência
             if (processedEvents.has(event.eventId)) {
               console.log(
-                `[Consumer] Skipping duplicate event: ${event.eventId}`
+                `[Consumidor] Ignorando evento duplicado: ${event.eventId}`
               );
               await client.xAck(streamKey, config.groupName, message.id);
               continue;
             }
 
-            // Filter by event type if specified
+            // Filtrar por tipo de evento se especificado
             if (
               config.eventTypes &&
               !config.eventTypes.includes(event.eventType)
@@ -106,39 +106,39 @@ export async function startConsumer(
 
             try {
               console.log(
-                `[Consumer] Processing event: ${event.eventType} (${event.eventId})`
+                `[Consumidor] Processando evento: ${event.eventType} (${event.eventId})`
               );
               await config.handler(event);
 
-              // Mark as processed for idempotency
+              // Marcar como processado para idempotência
               processedEvents.add(event.eventId);
 
-              // Acknowledge the message
+              // Confirmar recebimento da mensagem
               await client.xAck(streamKey, config.groupName, message.id);
-              console.log(`[Consumer] Event acknowledged: ${event.eventId}`);
+              console.log(`[Consumidor] Evento confirmado: ${event.eventId}`);
             } catch (handlerError) {
               console.error(
-                `[Consumer] Error processing event ${event.eventId}:`,
+                `[Consumidor] Erro ao processar evento ${event.eventId}:`,
                 handlerError
               );
-              // Don't acknowledge - message will be reprocessed
+              // Não confirmar - mensagem será reprocessada
             }
           }
         }
       } catch (error) {
-        console.error("[Consumer] Error reading from stream:", error);
+        console.error("[Consumidor] Erro ao ler do stream:", error);
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     }
   };
 
-  // Start the consume loop in the background
+  // Iniciar o loop de consumo em segundo plano
   consumeLoop().catch(console.error);
 
-  // Return a stop function
+  // Retornar função de parada
   return () => {
     isRunning = false;
-    console.log(`[Consumer] Stopping consumer: ${config.consumerName}`);
+    console.log(`[Consumidor] Parando consumidor: ${config.consumerName}`);
   };
 }
 

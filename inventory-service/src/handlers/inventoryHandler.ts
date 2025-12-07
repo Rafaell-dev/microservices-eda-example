@@ -5,7 +5,7 @@ import {
   InventoryUpdatedPayload,
 } from "../../../shared/types";
 
-// Simulated inventory storage
+// Armazenamento de estoque simulado
 const inventory = new Map<string, number>([
   ["prod-1", 100],
   ["prod-2", 50],
@@ -24,16 +24,18 @@ export function getInventory(): Record<string, number> {
 
 export async function handleInventoryEvent(event: BaseEvent): Promise<void> {
   if (event.eventType !== "OrderCreated") {
-    console.log(`[InventoryHandler] Ignoring event type: ${event.eventType}`);
+    console.log(
+      `[HandlerEstoque] Ignorando tipo de evento: ${event.eventType}`
+    );
     return;
   }
 
   const payload = event.payload as OrderCreatedPayload;
   console.log(
-    `[InventoryHandler] Processing inventory for order: ${payload.orderId}`
+    `[HandlerEstoque] Processando estoque para pedido: ${payload.orderId}`
   );
 
-  // Simulate processing delay
+  // Simular atraso no processamento
   await simulateProcessingDelay();
 
   const updatedItems: Array<{
@@ -42,7 +44,7 @@ export async function handleInventoryEvent(event: BaseEvent): Promise<void> {
     newStock: number;
   }> = [];
 
-  // Update inventory for each item
+  // Atualizar estoque para cada item
   for (const item of payload.items) {
     const currentStock = inventory.get(item.productId) || 0;
     const newStock = Math.max(0, currentStock - item.quantity);
@@ -56,11 +58,11 @@ export async function handleInventoryEvent(event: BaseEvent): Promise<void> {
     });
 
     console.log(
-      `[InventoryHandler] Product ${item.productId}: ${currentStock} -> ${newStock}`
+      `[HandlerEstoque] Produto ${item.productId}: ${currentStock} -> ${newStock}`
     );
   }
 
-  // Publish InventoryUpdated event
+  // Publicar evento EstoqueAtualizado
   const inventoryPayload: InventoryUpdatedPayload = {
     orderId: payload.orderId,
     items: updatedItems,
@@ -68,7 +70,7 @@ export async function handleInventoryEvent(event: BaseEvent): Promise<void> {
 
   await publishEvent("InventoryUpdated", inventoryPayload);
   console.log(
-    `[InventoryHandler] Inventory updated for order: ${payload.orderId}`
+    `[HandlerEstoque] Estoque atualizado para pedido: ${payload.orderId}`
   );
 }
 

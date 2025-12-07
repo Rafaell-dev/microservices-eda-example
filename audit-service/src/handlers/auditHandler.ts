@@ -11,21 +11,21 @@ interface AuditEntry {
   receivedAt: string;
 }
 
-// In-memory storage
+// Armazenamento em memória
 const auditLogs: AuditEntry[] = [];
 
-// File path for persistence
+// Caminho do arquivo para persistência
 const DATA_DIR = path.join(__dirname, "../../data");
 const AUDIT_FILE = path.join(DATA_DIR, "audit.json");
 
-// Ensure data directory exists
+// Garantir que o diretório de dados existe
 function ensureDataDir(): void {
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
   }
 }
 
-// Load existing audit data
+// Carregar dados de auditoria existentes
 function loadAuditData(): void {
   try {
     ensureDataDir();
@@ -34,25 +34,31 @@ function loadAuditData(): void {
       const parsed = JSON.parse(data);
       auditLogs.push(...parsed);
       console.log(
-        `[AuditHandler] Loaded ${parsed.length} existing audit entries`
+        `[HandlerAuditoria] Carregados ${parsed.length} registros de auditoria existentes`
       );
     }
   } catch (error) {
-    console.error("[AuditHandler] Error loading audit data:", error);
+    console.error(
+      "[HandlerAuditoria] Erro ao carregar dados de auditoria:",
+      error
+    );
   }
 }
 
-// Save audit data to file
+// Salvar dados de auditoria no arquivo
 function saveAuditData(): void {
   try {
     ensureDataDir();
     fs.writeFileSync(AUDIT_FILE, JSON.stringify(auditLogs, null, 2));
   } catch (error) {
-    console.error("[AuditHandler] Error saving audit data:", error);
+    console.error(
+      "[HandlerAuditoria] Erro ao salvar dados de auditoria:",
+      error
+    );
   }
 }
 
-// Initialize on module load
+// Inicializar ao carregar o módulo
 loadAuditData();
 
 export async function handleAuditEvent(event: BaseEvent): Promise<void> {
@@ -67,13 +73,15 @@ export async function handleAuditEvent(event: BaseEvent): Promise<void> {
 
   auditLogs.push(entry);
 
-  // Save to file (in production, use a proper database)
+  // Salvar no arquivo (em produção, usar um banco de dados apropriado)
   saveAuditData();
 
   console.log(
-    `[AuditHandler] 📝 Event logged: ${event.eventType} (${event.eventId})`
+    `[HandlerAuditoria] 📝 Evento registrado: ${event.eventType} (${event.eventId})`
   );
-  console.log(`[AuditHandler] Total events in audit log: ${auditLogs.length}`);
+  console.log(
+    `[HandlerAuditoria] Total de eventos no log de auditoria: ${auditLogs.length}`
+  );
 }
 
 export function getAuditLogs(limit?: number, eventType?: string): AuditEntry[] {
@@ -83,7 +91,7 @@ export function getAuditLogs(limit?: number, eventType?: string): AuditEntry[] {
     logs = logs.filter((log) => log.eventType === eventType);
   }
 
-  // Sort by receivedAt descending (most recent first)
+  // Ordenar por receivedAt decrescente (mais recente primeiro)
   logs.sort(
     (a, b) =>
       new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()

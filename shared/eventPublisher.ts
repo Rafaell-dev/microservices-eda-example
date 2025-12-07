@@ -26,7 +26,7 @@ export async function publishEvent<T extends Record<string, unknown>>(
   const streamKey = options?.streamKey || STREAM_KEY;
   const maxLen = options?.maxLen || 10000;
 
-  // Add event to stream with automatic trimming
+  // Adicionar evento ao stream com corte automático
   const messageId = await client.xAdd(
     streamKey,
     "*",
@@ -46,7 +46,7 @@ export async function publishEvent<T extends Record<string, unknown>>(
   );
 
   console.log(
-    `[Publisher] Event published: ${eventType} (${event.eventId}) -> ${messageId}`
+    `[Publicador] Evento publicado: ${eventType} (${event.eventId}) -> ${messageId}`
   );
 
   return event.eventId;
@@ -80,7 +80,7 @@ export async function publishRawEvent(
   );
 
   console.log(
-    `[Publisher] Raw event published: ${event.eventType} (${event.eventId}) -> ${messageId}`
+    `[Publicador] Evento bruto publicado: ${event.eventType} (${event.eventId}) -> ${messageId}`
   );
 
   return event.eventId;

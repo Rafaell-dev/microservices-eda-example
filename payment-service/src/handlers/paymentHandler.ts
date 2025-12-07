@@ -7,27 +7,29 @@ import {
   PaymentFailedPayload,
 } from "../../../shared/types";
 
-// Simulated payment methods
+// Métodos de pagamento simulados
 const PAYMENT_METHODS = ["credit_card", "debit_card", "pix", "boleto"];
 
-// Simulated failure rate (20% chance of failure)
+// Taxa de falha simulada (20% de chance de falha)
 const FAILURE_RATE = 0.2;
 
 export async function handlePaymentEvent(event: BaseEvent): Promise<void> {
   if (event.eventType !== "OrderCreated") {
-    console.log(`[PaymentHandler] Ignoring event type: ${event.eventType}`);
+    console.log(
+      `[HandlerPagamento] Ignorando tipo de evento: ${event.eventType}`
+    );
     return;
   }
 
   const payload = event.payload as OrderCreatedPayload;
   console.log(
-    `[PaymentHandler] Processing payment for order: ${payload.orderId}`
+    `[HandlerPagamento] Processando pagamento para pedido: ${payload.orderId}`
   );
 
-  // Simulate payment processing delay
+  // Simular atraso no processamento de pagamento
   await simulateProcessingDelay();
 
-  // Simulate random payment success/failure
+  // Simular sucesso/falha aleatório do pagamento
   const isSuccess = Math.random() > FAILURE_RATE;
 
   if (isSuccess) {
@@ -41,14 +43,14 @@ export async function handlePaymentEvent(event: BaseEvent): Promise<void> {
 
     await publishEvent("PaymentProcessed", paymentPayload);
     console.log(
-      `[PaymentHandler] Payment processed successfully for order: ${payload.orderId}`
+      `[HandlerPagamento] Pagamento processado com sucesso para pedido: ${payload.orderId}`
     );
   } else {
     const failureReasons = [
-      "Insufficient funds",
-      "Card declined",
-      "Transaction timeout",
-      "Invalid payment details",
+      "Saldo insuficiente",
+      "Cartão recusado",
+      "Tempo limite da transação",
+      "Dados de pagamento inválidos",
     ];
 
     const failedPayload: PaymentFailedPayload = {
@@ -59,7 +61,7 @@ export async function handlePaymentEvent(event: BaseEvent): Promise<void> {
 
     await publishEvent("PaymentFailed", failedPayload);
     console.log(
-      `[PaymentHandler] Payment failed for order: ${payload.orderId} - ${failedPayload.reason}`
+      `[HandlerPagamento] Pagamento falhou para pedido: ${payload.orderId} - ${failedPayload.reason}`
     );
   }
 }

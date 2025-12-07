@@ -1,5 +1,5 @@
 /**
- * Event types for the EDA system
+ * Tipos de eventos para o sistema EDA
  */
 
 export interface BaseEvent<T = Record<string, unknown>> {

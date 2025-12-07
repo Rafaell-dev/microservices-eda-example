@@ -26,15 +26,15 @@ export async function getRedisClient(
   client = createClient({ url });
 
   client.on("error", (err) => {
-    console.error("Redis Client Error:", err);
+    console.error("Erro no cliente Redis:", err);
   });
 
   client.on("connect", () => {
-    console.log("Redis Client Connected");
+    console.log("Cliente Redis conectado");
   });
 
   client.on("reconnecting", () => {
-    console.log("Redis Client Reconnecting...");
+    console.log("Cliente Redis reconectando...");
   });
 
   await client.connect();
@@ -45,7 +45,7 @@ export async function closeRedisConnection(): Promise<void> {
   if (client && client.isOpen) {
     await client.quit();
     client = null;
-    console.log("Redis connection closed");
+    console.log("Conexão Redis encerrada");
   }
 }
 

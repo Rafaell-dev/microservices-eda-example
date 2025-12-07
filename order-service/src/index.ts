@@ -22,27 +22,27 @@ async function main() {
   });
 
   try {
-    // Initialize Redis connection
+    // Inicializar conexão Redis
     await getRedisClient();
-    fastify.log.info("Connected to Redis");
+    fastify.log.info("Conectado ao Redis");
 
-    // Register routes
+    // Registrar rotas
     await registerOrderRoutes(fastify);
 
-    // Graceful shutdown
+    // Encerramento
     const signals: NodeJS.Signals[] = ["SIGINT", "SIGTERM"];
     signals.forEach((signal) => {
       process.on(signal, async () => {
-        fastify.log.info(`Received ${signal}, shutting down...`);
+        fastify.log.info(`Sinal ${signal} recebido, encerrando...`);
         await fastify.close();
         await closeRedisConnection();
         process.exit(0);
       });
     });
 
-    // Start server
+    // Iniciar servidor
     await fastify.listen({ port: PORT, host: "0.0.0.0" });
-    fastify.log.info(`Order Service running on port ${PORT}`);
+    fastify.log.info(`Serviço de Pedidos rodando na porta ${PORT}`);
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);

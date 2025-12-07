@@ -29,25 +29,27 @@ async function main() {
   let stopConsumer: (() => void) | null = null;
 
   try {
-    // Initialize Redis connection
+    // Inicializar conexão Redis
     await getRedisClient();
-    fastify.log.info("Connected to Redis");
+    fastify.log.info("Conectado ao Redis");
 
-    // Start event consumer - subscribe to ALL events (no filter)
+    // Iniciar consumidor de eventos - inscrever em TODOS os eventos (sem filtro)
     stopConsumer = await startConsumer({
       streamKey: process.env.REDIS_STREAM_KEY || "events-stream",
       groupName: "audit-service-group",
       consumerName: "audit-consumer-1",
       handler: handleAuditEvent,
     });
-    fastify.log.info("Audit event consumer started - listening to ALL events");
+    fastify.log.info(
+      "Consumidor de eventos de auditoria iniciado - ouvindo TODOS os eventos"
+    );
 
-    // Health check endpoint
+    // Endpoint de verificação de saúde
     fastify.get("/health", async () => {
       return { status: "ok", service: "audit-service" };
     });
 
-    // Get all audit logs
+    // Obter todos os logs de auditoria
     fastify.get("/audit", async (request) => {
       const { limit, eventType } = request.query as {
         limit?: string;
@@ -56,16 +58,16 @@ async function main() {
       return getAuditLogs(limit ? parseInt(limit, 10) : undefined, eventType);
     });
 
-    // Get audit statistics
+    // Obter estatísticas de auditoria
     fastify.get("/audit/stats", async () => {
       return getAuditStats();
     });
 
-    // Graceful shutdown
+    // Encerramento gracioso
     const signals: NodeJS.Signals[] = ["SIGINT", "SIGTERM"];
     signals.forEach((signal) => {
       process.on(signal, async () => {
-        fastify.log.info(`Received ${signal}, shutting down...`);
+        fastify.log.info(`Sinal ${signal} recebido, encerrando...`);
         if (stopConsumer) stopConsumer();
         await fastify.close();
         await closeRedisConnection();
@@ -73,9 +75,9 @@ async function main() {
       });
     });
 
-    // Start server
+    // Iniciar servidor
     await fastify.listen({ port: PORT, host: "0.0.0.0" });
-    fastify.log.info(`Audit Service running on port ${PORT}`);
+    fastify.log.info(`Serviço de Auditoria rodando na porta ${PORT}`);
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
