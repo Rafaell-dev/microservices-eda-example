@@ -2,7 +2,11 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { v4 as uuidv4 } from "uuid";
 import { publishEvent } from "../../../shared/eventPublisher";
 import { OrderCreatedPayload, OrderItem } from "../../../shared/types";
-import { validateOrder, formatOrderResponse } from "../utils/orderUtils";
+import {
+  validateOrder,
+  formatOrderResponse,
+  calculateOrderTotal,
+} from "../utils/orderUtils";
 import {
   createOrder as createOrderInDb,
   getOrderById,
@@ -12,7 +16,6 @@ import {
 interface CreateOrderBody {
   customerId: string;
   items: OrderItem[];
-  total: number;
 }
 
 interface GetOrderParams {
@@ -34,14 +37,15 @@ export async function registerOrderRoutes(
       schema: {
         body: {
           type: "object",
-          required: ["customerId", "items", "total"],
+          required: ["customerId", "items"],
           properties: {
             customerId: { type: "string" },
             items: {
               type: "array",
+              minItems: 1,
               items: {
                 type: "object",
-                required: ["productId", "quantity"],
+                required: ["productId", "quantity", "price"],
                 properties: {
                   productId: { type: "string" },
                   quantity: { type: "number", minimum: 1 },
@@ -49,7 +53,6 @@ export async function registerOrderRoutes(
                 },
               },
             },
-            total: { type: "number", minimum: 0 },
           },
         },
       },
@@ -58,10 +61,13 @@ export async function registerOrderRoutes(
       request: FastifyRequest<{ Body: CreateOrderBody }>,
       reply: FastifyReply
     ) => {
-      const { customerId, items, total } = request.body;
+      const { customerId, items } = request.body;
+
+      // Calcular total
+      const total = calculateOrderTotal(items);
 
       // Validar pedido
-      const validation = validateOrder(customerId, items, total);
+      const validation = validateOrder(customerId, items);
       if (!validation.valid) {
         return reply.status(400).send({ error: validation.error });
       }

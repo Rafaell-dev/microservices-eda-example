@@ -7,8 +7,7 @@ interface ValidationResult {
 
 export function validateOrder(
   customerId: string,
-  items: OrderItem[],
-  total: number
+  items: OrderItem[]
 ): ValidationResult {
   if (!customerId || customerId.trim() === "") {
     return { valid: false, error: "ID do cliente é obrigatório" };
@@ -28,10 +27,12 @@ export function validateOrder(
         error: "Cada item deve ter uma quantidade de pelo menos 1",
       };
     }
-  }
-
-  if (total < 0) {
-    return { valid: false, error: "Total não pode ser negativo" };
+    if (item.price === undefined || item.price < 0) {
+      return {
+        valid: false,
+        error: "Cada item deve ter um preço válido",
+      };
+    }
   }
 
   return { valid: true };
