@@ -1,0 +1,19 @@
+{
+  "name": "eda-load-tests",
+  "version": "1.0.0",
+  "description": "Testes de carga para EDA Order Processing System",
+  "scripts": {
+    "test": "node -e \"require('child_process').execSync('.\\\\k6.exe run load-test.js', {stdio: 'inherit'})\"",
+    "test:smoke": ".\\k6.exe run -e MAX_VUS=5 -e CONSTANT_VUS=3 -e BURST_RATE=10 -e RAMP_UP_DURATION=10s -e STEADY_DURATION=20s -e RAMP_DOWN_DURATION=10s -e CONSTANT_DURATION=30s -e CONSTANT_START=1m -e BURST_START=2m -e TOTAL_DURATION=3m load-test.js",
+    "test:load": ".\\k6.exe run -e MAX_VUS=50 -e CONSTANT_VUS=20 -e BURST_RATE=100 load-test.js",
+    "test:stress": ".\\k6.exe run -e MAX_VUS=100 -e CONSTANT_VUS=50 -e BURST_RATE=200 load-test.js",
+    "test:simple": ".\\k6.exe run --vus 10 --duration 30s load-test.js"
+  },
+  "keywords": [
+    "k6",
+    "load-testing",
+    "performance",
+    "eda"
+  ],
+  "license": "MIT"
+}
