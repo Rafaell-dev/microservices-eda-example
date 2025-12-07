@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import dotenv from "dotenv";
 import path from "path";
 import { getRedisClient, closeRedisConnection } from "../../shared/redisClient";
+import { startConsumer } from "../../shared/eventConsumer";
 import {
   createDatabase,
   initializeOrderTables,
@@ -10,6 +11,7 @@ import {
 } from "../../shared/database";
 import { registerOrderRoutes } from "./routes/orders";
 import { initOrderRepository } from "./utils/orderRepository";
+import { handlePaymentEvents } from "./handlers/orderEventHandler";
 
 dotenv.config();
 
@@ -33,6 +35,8 @@ async function main() {
     },
   });
 
+  let stopConsumer: (() => void) | null = null;
+
   try {
     // Inicializar banco de dados SQLite
     db = createDatabase(DATABASE_PATH);
@@ -44,6 +48,16 @@ async function main() {
     await getRedisClient();
     fastify.log.info("Conectado ao Redis");
 
+    // Iniciar consumidor de eventos de pagamento
+    stopConsumer = await startConsumer({
+      streamKey: process.env.REDIS_STREAM_KEY || "events-stream",
+      groupName: "order-service-group",
+      consumerName: "order-consumer-1",
+      eventTypes: ["PaymentProcessed", "PaymentFailed"],
+      handler: handlePaymentEvents,
+    });
+    fastify.log.info("Consumidor de eventos de pagamento iniciado");
+
     // Registrar rotas
     await registerOrderRoutes(fastify);
 
@@ -52,6 +66,7 @@ async function main() {
     signals.forEach((signal) => {
       process.on(signal, async () => {
         fastify.log.info(`Sinal ${signal} recebido, encerrando...`);
+        if (stopConsumer) stopConsumer();
         await fastify.close();
         await closeRedisConnection();
         closeDatabase(db);
