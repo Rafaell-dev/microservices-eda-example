@@ -1,0 +1,31 @@
+{
+  "name": "eda-order-processing",
+  "version": "1.0.0",
+  "description": "Sistema de processamento de pedidos usando EDA com Node.js, Fastify, TypeScript e Redis Streams",
+  "scripts": {
+    "install:all": "npm run install:shared && npm run install:services",
+    "install:shared": "cd shared && npm install",
+    "install:services": "cd order-service && npm install && cd ../payment-service && npm install && cd ../inventory-service && npm install && cd ../notification-service && npm install && cd ../audit-service && npm install",
+    "build:shared": "cd shared && npm run build",
+    "dev": "concurrently -n \"ORDER,PAYMENT,INVENTORY,NOTIFICATION,AUDIT\" -c \"blue,green,yellow,magenta,cyan\" \"npm run dev:order\" \"npm run dev:payment\" \"npm run dev:inventory\" \"npm run dev:notification\" \"npm run dev:audit\"",
+    "dev:order": "cd order-service && npm run dev",
+    "dev:payment": "cd payment-service && npm run dev",
+    "dev:inventory": "cd inventory-service && npm run dev",
+    "dev:notification": "cd notification-service && npm run dev",
+    "dev:audit": "cd audit-service && npm run dev",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "start": "npm run docker:up && npm run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "eda",
+    "event-driven",
+    "redis-streams",
+    "fastify",
+    "microservices"
+  ],
+  "license": "MIT"
+}

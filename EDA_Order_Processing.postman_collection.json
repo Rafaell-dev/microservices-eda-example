@@ -1,0 +1,293 @@
+{
+  "info": {
+    "_postman_id": "eda-order-processing-system",
+    "name": "EDA Order Processing System",
+    "description": "Sistema de processamento de pedidos usando Arquitetura Orientada a Eventos (EDA) com Node.js, Fastify, TypeScript e Redis Streams.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "order_service_url",
+      "value": "http://localhost:3001",
+      "type": "default"
+    },
+    {
+      "key": "payment_service_url",
+      "value": "http://localhost:3002",
+      "type": "default"
+    },
+    {
+      "key": "inventory_service_url",
+      "value": "http://localhost:3003",
+      "type": "default"
+    },
+    {
+      "key": "notification_service_url",
+      "value": "http://localhost:3004",
+      "type": "default"
+    },
+    {
+      "key": "audit_service_url",
+      "value": "http://localhost:3005",
+      "type": "default"
+    }
+  ],
+  "item": [
+    {
+      "name": "Order Service",
+      "description": "Serviço de pedidos (:3001)",
+      "item": [
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"cust-001\",\n  \"items\": [\n    { \"productId\": \"prod-1\", \"quantity\": 2, \"price\": 49.90 },\n    { \"productId\": \"prod-2\", \"quantity\": 1, \"price\": 99.90 }\n  ],\n  \"total\": 199.70\n}"
+            },
+            "url": {
+              "raw": "{{order_service_url}}/orders",
+              "host": ["{{order_service_url}}"],
+              "path": ["orders"]
+            },
+            "description": "Criar novo pedido"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{order_service_url}}/orders/:id",
+              "host": ["{{order_service_url}}"],
+              "path": ["orders", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "order-uuid-here",
+                  "description": "ID do pedido"
+                }
+              ]
+            },
+            "description": "Buscar pedido por ID"
+          },
+          "response": []
+        },
+        {
+          "name": "List All Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{order_service_url}}/orders",
+              "host": ["{{order_service_url}}"],
+              "path": ["orders"]
+            },
+            "description": "Listar todos os pedidos"
+          },
+          "response": []
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{order_service_url}}/health",
+              "host": ["{{order_service_url}}"],
+              "path": ["health"]
+            },
+            "description": "Health check do Order Service"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Payment Service",
+      "description": "Serviço de pagamento (:3002)",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{payment_service_url}}/health",
+              "host": ["{{payment_service_url}}"],
+              "path": ["health"]
+            },
+            "description": "Health check do Payment Service"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Inventory Service",
+      "description": "Serviço de inventário (:3003)",
+      "item": [
+        {
+          "name": "Get Inventory",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{inventory_service_url}}/inventory",
+              "host": ["{{inventory_service_url}}"],
+              "path": ["inventory"]
+            },
+            "description": "Ver estoque atual"
+          },
+          "response": []
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{inventory_service_url}}/health",
+              "host": ["{{inventory_service_url}}"],
+              "path": ["health"]
+            },
+            "description": "Health check do Inventory Service"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notification Service",
+      "description": "Serviço de notificações (:3004)",
+      "item": [
+        {
+          "name": "Get Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{notification_service_url}}/notifications",
+              "host": ["{{notification_service_url}}"],
+              "path": ["notifications"]
+            },
+            "description": "Ver notificações enviadas"
+          },
+          "response": []
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{notification_service_url}}/health",
+              "host": ["{{notification_service_url}}"],
+              "path": ["health"]
+            },
+            "description": "Health check do Notification Service"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Audit Service",
+      "description": "Serviço de auditoria (:3005)",
+      "item": [
+        {
+          "name": "Get Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{audit_service_url}}/audit",
+              "host": ["{{audit_service_url}}"],
+              "path": ["audit"]
+            },
+            "description": "Ver logs de auditoria"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Audit Logs (with limit)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{audit_service_url}}/audit?limit=10",
+              "host": ["{{audit_service_url}}"],
+              "path": ["audit"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Número máximo de logs a retornar"
+                }
+              ]
+            },
+            "description": "Ver últimos N logs de auditoria"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Audit Logs (by event type)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{audit_service_url}}/audit?eventType=OrderCreated",
+              "host": ["{{audit_service_url}}"],
+              "path": ["audit"],
+              "query": [
+                {
+                  "key": "eventType",
+                  "value": "OrderCreated",
+                  "description": "Filtrar por tipo de evento (OrderCreated, PaymentProcessed, PaymentFailed, InventoryUpdated)"
+                }
+              ]
+            },
+            "description": "Filtrar logs por tipo de evento"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Audit Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{audit_service_url}}/audit/stats",
+              "host": ["{{audit_service_url}}"],
+              "path": ["audit", "stats"]
+            },
+            "description": "Ver estatísticas de eventos processados"
+          },
+          "response": []
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{audit_service_url}}/health",
+              "host": ["{{audit_service_url}}"],
+              "path": ["health"]
+            },
+            "description": "Health check do Audit Service"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

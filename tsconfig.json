@@ -1,0 +1,11 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./shared" },
+    { "path": "./order-service" },
+    { "path": "./payment-service" },
+    { "path": "./inventory-service" },
+    { "path": "./notification-service" },
+    { "path": "./audit-service" }
+  ]
+}

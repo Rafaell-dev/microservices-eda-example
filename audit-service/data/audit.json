@@ -1,0 +1,61 @@
+[
+  {
+    "id": "audit-1765092908632-p97w3772f",
+    "eventId": "965ec44b-9678-4b28-add8-3fa8e1e7d299",
+    "eventType": "OrderCreated",
+    "timestamp": "2025-12-07T07:35:08.627Z",
+    "payload": {
+      "orderId": "a3932de3-d870-4f15-a1a0-e10c30acd085",
+      "customerId": "cust-001",
+      "items": [
+        {
+          "productId": "prod-1",
+          "quantity": 2,
+          "price": 49.9
+        },
+        {
+          "productId": "prod-2",
+          "quantity": 1,
+          "price": 99.9
+        }
+      ],
+      "total": 199.7
+    },
+    "receivedAt": "2025-12-07T07:35:08.633Z"
+  },
+  {
+    "id": "audit-1765092914264-t71v686w2",
+    "eventId": "91a77e03-d540-4114-91ba-50ca6ebdd9a8",
+    "eventType": "InventoryUpdated",
+    "timestamp": "2025-12-07T07:35:09.264Z",
+    "payload": {
+      "orderId": "a3932de3-d870-4f15-a1a0-e10c30acd085",
+      "items": [
+        {
+          "productId": "prod-1",
+          "quantity": 2,
+          "newStock": 98
+        },
+        {
+          "productId": "prod-2",
+          "quantity": 1,
+          "newStock": 49
+        }
+      ]
+    },
+    "receivedAt": "2025-12-07T07:35:14.264Z"
+  },
+  {
+    "id": "audit-1765092914269-7z8t0oujj",
+    "eventId": "1633d82d-4f37-4615-840f-bfedf087bc10",
+    "eventType": "PaymentProcessed",
+    "timestamp": "2025-12-07T07:35:11.025Z",
+    "payload": {
+      "orderId": "a3932de3-d870-4f15-a1a0-e10c30acd085",
+      "paymentId": "95f89d08-2bf2-4796-b1b1-4a7f6e2cc870",
+      "amount": 199.7,
+      "method": "pix"
+    },
+    "receivedAt": "2025-12-07T07:35:14.269Z"
+  }
+]
